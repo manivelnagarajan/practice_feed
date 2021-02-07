@@ -68,37 +68,52 @@ class RemoteFeedLoaderTests: XCTestCase {
     
     func test_deliversValidItems_With200Response() {
         let (sut, client) = makeSUT()
-        let item1 = FeedItem(
-            id: UUID(),
-            description: nil,
-            location: nil,
-            imageURL: URL(string: "https://a-image-url.com/")!)
         
-        let item1JSON = [
-            "id": item1.id.uuidString,
-            "image": item1.imageURL.absoluteString]
+        let item1 = makeItem(id: UUID(), imageURL: URL(string: "https://a-image-url.com/")!)
+        let item2 = makeItem(id: UUID(), description: "Test description", location: "test location", imageURL: URL(string: "https://another-image-url.com/")!)
         
-        let item2 = FeedItem(
-            id: UUID(),
-            description: "test description",
-            location: "test location",
-            imageURL: URL(string: "https://another-image-url.com/")!)
+        let items = ["items": [item1.json, item2.json]]
         
-        let item2JSON = [
-            "id": item2.id.uuidString,
-            "description": item2.description,
-            "location": item2.location,
-            "image": item2.imageURL.absoluteString]
-        
-        let items = ["items": [item1JSON, item2JSON]]
-        
-        expect(sut, toCompleteWithResult: .success([item1, item2])) {
+        expect(sut, toCompleteWithResult: .success([item1.model, item2.model])) {
             let json = try! JSONSerialization.data(withJSONObject: items)
             client.complete(withStatusCode: 200, data: json)
         }
     }
     
     //MARK: Helpers
+    private func makeSUT(url: URL = URL(string: "https://a-url.com/")!) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
+        let client = HTTPClientSpy()
+        let sut = RemoteFeedLoader(client: client, url: url)
+        return (sut, client)
+    }
+    
+    private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult result: RemoteFeedLoader.Result, when action: @escaping () -> Void) {
+        var capturedResults = [RemoteFeedLoader.Result]()
+        sut.load({ result in capturedResults.append(result)})
+        
+        action()
+        
+        XCTAssertEqual(capturedResults, [result])
+    }
+    
+    private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model: FeedItem, json: [String: Any]) {
+        let item = FeedItem(
+            id: id,
+            description: description,
+            location: location,
+            imageURL: imageURL)
+        
+        let itemJSON = [
+            "id": item.id.uuidString,
+            "description": item.description,
+            "location": item.location,
+            "image": item.imageURL.absoluteString
+        ].reduce(into: [String: Any]()) { (result, element) in
+            if let value = element.value { result[element.key] = value}
+        }
+        return (item, itemJSON)
+    }
+    
     private class HTTPClientSpy: HTTPClient {
         
         var messages = [(url: URL, completion: (HTTPClientResult) -> Void)]()
@@ -123,19 +138,5 @@ class RemoteFeedLoaderTests: XCTestCase {
             messages[index].completion(.success(response, data))
         }
     }
-    
-    private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult result: RemoteFeedLoader.Result, when action: @escaping () -> Void) {
-        var capturedResults = [RemoteFeedLoader.Result]()
-        sut.load({ result in capturedResults.append(result)})
-        
-        action()
-        
-        XCTAssertEqual(capturedResults, [result])
-    }
-    
-    private func makeSUT(url: URL = URL(string: "https://a-url.com/")!) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
-        let client = HTTPClientSpy()
-        let sut = RemoteFeedLoader(client: client, url: url)
-        return (sut, client)
-    }
+
 }
