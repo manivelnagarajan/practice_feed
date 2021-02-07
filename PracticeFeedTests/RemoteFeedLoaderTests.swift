@@ -33,12 +33,12 @@ class RemoteFeedLoaderTests: XCTestCase {
     func test_LoadData_Connectivity_Fails() {
         let (sut, client) = makeSUT()
         
-        var capturedErrors = [RemoteFeedLoader.Error]()
-        sut.load({ error in capturedErrors.append(error) })
+        var capturedResults = [RemoteFeedLoader.Result]()
+        sut.load({ result in capturedResults.append(result) })
         
         let clientError = NSError(domain: "Test", code: 0, userInfo: nil)
         client.complete(with: clientError)
-        XCTAssertEqual(capturedErrors, [.connectiviy])
+        XCTAssertEqual(capturedResults, [.failure(.connectiviy)])
     }
     
     func test_LoadData_Fails_InvalidData_Non200Response() {
@@ -46,12 +46,30 @@ class RemoteFeedLoaderTests: XCTestCase {
         
         let samples = [199, 201, 300, 400, 500]
         samples.enumerated().forEach { (index, code) in
-            var capturedErrors = [RemoteFeedLoader.Error]()
-            sut.load({ error in capturedErrors.append(error) })
+            var capturedResults = [RemoteFeedLoader.Result]()
+            sut.load({ error in capturedResults.append(error) })
 
             client.complete(withStatusCode: code, at: index)
-            XCTAssertEqual(capturedErrors, [.invalidData])
+            XCTAssertEqual(capturedResults, [.failure(.invalidData)])
         }
+    }
+    
+    func test_LoadData_InvalidJSON_With200Response() {
+        let (sut, client) = makeSUT()
+        var capturedResults = [RemoteFeedLoader.Result]()
+        sut.load({ result in capturedResults.append(result)})
+        let data = "invalid json".data(using: .utf8)!
+        client.complete(withStatusCode: 200, data: data)
+        XCTAssertEqual(capturedResults, [.failure(.invalidData)])
+    }
+    
+    func test_LoadData_ValidJSON_NoItems_With200Response() {
+        let (sut, client) = makeSUT()
+        var capturedResults = [RemoteFeedLoader.Result]()
+        sut.load({ result in capturedResults.append(result)})
+        let data = "{\"items\": []}".data(using: .utf8)!
+        client.complete(withStatusCode: 200, data: data)
+        XCTAssertEqual(capturedResults, [.success([])])
     }
     
     //MARK: Helpers
@@ -70,13 +88,13 @@ class RemoteFeedLoaderTests: XCTestCase {
             messages[index].completion(.failure(error))
         }
         
-        func complete(withStatusCode code: Int, at index: Int = 0) {
+        func complete(withStatusCode code: Int, data: Data = Data(), at index: Int = 0) {
             let response = HTTPURLResponse(
                 url: messages[index].url,
                 statusCode: code,
                 httpVersion: nil,
                 headerFields: nil)!
-            messages[index].completion(.success(response))
+            messages[index].completion(.success(response, data))
         }
     }
     
