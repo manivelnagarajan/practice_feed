@@ -72,11 +72,9 @@ class RemoteFeedLoaderTests: XCTestCase {
         let item1 = makeItem(id: UUID(), imageURL: URL(string: "https://a-image-url.com/")!)
         let item2 = makeItem(id: UUID(), description: "Test description", location: "test location", imageURL: URL(string: "https://another-image-url.com/")!)
         
-        let items = ["items": [item1.json, item2.json]]
-        
         expect(sut, toCompleteWithResult: .success([item1.model, item2.model])) {
-            let json = try! JSONSerialization.data(withJSONObject: items)
-            client.complete(withStatusCode: 200, data: json)
+            let data = self.makeItemsJSON([item1.json, item2.json])
+            client.complete(withStatusCode: 200, data: data)
         }
     }
     
@@ -94,6 +92,11 @@ class RemoteFeedLoaderTests: XCTestCase {
         action()
         
         XCTAssertEqual(capturedResults, [result])
+    }
+    
+    private func makeItemsJSON(_ itemJSONs: [[String: Any]]) -> Data {
+        let json = ["items":itemJSONs]
+        return try! JSONSerialization.data(withJSONObject: json)
     }
     
     private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model: FeedItem, json: [String: Any]) {
