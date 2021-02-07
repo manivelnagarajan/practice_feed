@@ -32,7 +32,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     
     func test_LoadData_Connectivity_Fails() {
         let (sut, client) = makeSUT()
-        expect(sut, toCompleteWithResult: .failure(.connectiviy)) {
+        expect(sut, toCompleteWithResult: failure(.connectiviy)) {
             let clientError = NSError(domain: "Test", code: 0, userInfo: nil)
             client.complete(with: clientError)
         }
@@ -43,7 +43,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         
         let samples = [199, 201, 300, 400, 500]
         samples.enumerated().forEach { (index, code) in
-            expect(sut, toCompleteWithResult: .failure(.invalidData)) {
+            expect(sut, toCompleteWithResult: failure(.invalidData)) {
                 let data = self.makeItemsJSON([])
                 client.complete(withStatusCode: code, data: data, at: index)
             }
@@ -52,7 +52,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     
     func test_LoadData_InvalidJSON_With200Response() {
         let (sut, client) = makeSUT()
-        expect(sut, toCompleteWithResult: .failure(.invalidData)) {
+        expect(sut, toCompleteWithResult: failure(.invalidData)) {
             let data = "invalid json".data(using: .utf8)!
             client.complete(withStatusCode: 200, data: data)
         }
@@ -114,7 +114,7 @@ class RemoteFeedLoaderTests: XCTestCase {
             switch (receivedResult, expectedResult) {
                 case let (.success(receivedItems), .success(expectedItems)):
                     XCTAssertEqual(receivedItems, expectedItems, file: file, line: line)
-                case let (.failure(receivedError), .failure(expectedError)):
+            case let (.failure(receivedError as RemoteFeedLoader.Error), .failure(expectedError as RemoteFeedLoader.Error)):
                     XCTAssertEqual(receivedError, expectedError, file: file, line: line)
                 default:
                     XCTFail("Expected result is \(expectedResult) but for \(receivedResult)")
@@ -128,6 +128,10 @@ class RemoteFeedLoaderTests: XCTestCase {
     private func makeItemsJSON(_ itemJSONs: [[String: Any]]) -> Data {
         let json = ["items":itemJSONs]
         return try! JSONSerialization.data(withJSONObject: json)
+    }
+    
+    private func failure(_ error: RemoteFeedLoader.Error) -> RemoteFeedLoader.Result {
+        .failure(error)
     }
     
     private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model: FeedItem, json: [String: Any]) {
