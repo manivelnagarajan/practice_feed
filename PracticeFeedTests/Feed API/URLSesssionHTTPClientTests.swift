@@ -41,10 +41,7 @@ class URLSesssionHTTPClientTests: XCTestCase {
         }
         
         override func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
-            if let task = stub[url] {
-                return task
-            }
-            return FakeURLSessionDataTask()
+            return stub[url] ?? FakeURLSessionDataTask()
         }
     }
     
