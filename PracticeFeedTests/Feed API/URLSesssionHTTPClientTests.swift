@@ -37,25 +37,22 @@ class URLSesssionHTTPClientTests: XCTestCase {
     }
     
     func test_getFromURL_performGetRequestWithURL() {
-        let url = URL(string: "https://any-url.com/")!
-        let sut = URLSessionHTTPClient()
+        let url = anyURL()
         let exp = expectation(description: "waiting for the request load")
         URLProtocolStub.observeRequests { request in
             XCTAssertEqual(request.url, url)
             XCTAssertEqual(request.httpMethod, "GET")
             exp.fulfill()
         }
-        sut.get(from: url) { _ in }
+        makeSUT().get(from: url) { _ in }
         wait(for: [exp], timeout: 1)
     }
     
     func test_getFromURL_dataTaskWithURL_Failure() {
-        let url = URL(string: "https://any-url.com/")!
-        let error = NSError(domain: "Test", code: 1, userInfo: nil)
-        URLProtocolStub.stub(error: error)
-        let sut = URLSessionHTTPClient()
+        let error = anyNSError()
+        URLProtocolStub.stub(error: anyNSError())
         let exp = expectation(description: "wait to get error")
-        sut.get(from: url, { result in
+        makeSUT().get(from: anyURL(), { result in
             switch result {
             case .failure(let receivedError as NSError):
                 XCTAssertEqual(error, receivedError)
@@ -68,6 +65,18 @@ class URLSesssionHTTPClientTests: XCTestCase {
     }
     
     //MARK: Helpers
+    private func makeSUT() -> URLSessionHTTPClient {
+        URLSessionHTTPClient()
+    }
+    
+    private func anyURL() -> URL {
+        URL(string: "https://any-url.com/")!
+    }
+    
+    private func anyNSError() -> NSError {
+        NSError(domain: "Test", code: 1, userInfo: nil)
+    }
+    
     private class URLProtocolStub: URLProtocol {
         private static var stub: Stub?
         private static var requestObserver: ((URLRequest) -> ())?
