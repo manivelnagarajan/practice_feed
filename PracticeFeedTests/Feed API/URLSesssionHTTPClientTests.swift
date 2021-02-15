@@ -9,25 +9,6 @@ import Foundation
 import PracticeFeed
 import XCTest
 
-class URLSessionHTTPClient {
-    let session: URLSession
-    init(session: URLSession = .shared) {
-        self.session = session
-    }
-    private struct UnRepresentedError: Error {}
-    func get(from url: URL, _ completion: @escaping (HTTPClientResult) -> Void) {
-        session.dataTask(with: url, completionHandler: { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-            } else if let data = data, let response = response as? HTTPURLResponse {
-                completion(.success(response, data))
-            } else {
-                completion(.failure(UnRepresentedError()))
-            }
-        }).resume()
-    }
-}
-
 class URLSesssionHTTPClientTests: XCTestCase {
     
     override func setUp() {
@@ -123,7 +104,7 @@ class URLSesssionHTTPClientTests: XCTestCase {
         return receivedResult
     }
     
-    private func makeSUT() -> URLSessionHTTPClient {
+    private func makeSUT() -> HTTPClient {
         let sut = URLSessionHTTPClient()
         trackForMemoryLeak(sut)
         return sut
