@@ -90,37 +90,37 @@ class URLSesssionHTTPClientTests: XCTestCase {
     
     //MARK: Helpers
     func resultValueFor(data: Data?, response: URLResponse?) -> (data: Data, response: HTTPURLResponse)? {
-        URLProtocolStub.stub(data: data, response: response, error: nil)
-        let exp = expectation(description: "wait to get error")
-        var receivedValues: (data: Data, response: HTTPURLResponse)?
-        makeSUT().get(from: anyURL(), { result in
-            switch result {
-            case let .success(response, data):
-                receivedValues = (data, response)
-            default:
-                XCTFail("Expected success, but got \(result) instead")
-            }
-            exp.fulfill()
-        })
-        wait(for: [exp], timeout: 1.0)
-        return receivedValues
+        let result = resultFor(data: data, response: response, error: nil)
+        switch result {
+        case let .success(response, data):
+            return (data, response)
+        default:
+            XCTFail("Expected success, but got \(String(describing: result)) instead")
+        }
+        return nil
     }
     
     func resultErrorFor(data: Data?, response: URLResponse?, error: Error?) -> Error? {
+        let result = resultFor(data: data, response: response, error: error)
+        switch result {
+        case let .failure(error):
+            return error
+        default:
+            XCTFail("Expected failure, but got \(String(describing: result)) instead")
+        }
+        return nil
+    }
+    
+    func resultFor(data: Data?, response: URLResponse?, error: Error?) -> HTTPClientResult? {
         URLProtocolStub.stub(data: data, response: response, error: error)
-        let exp = expectation(description: "wait to get error")
-        var receivedError: Error?
-        makeSUT().get(from: anyURL(), { result in
-            switch result {
-            case let .failure(error):
-                receivedError = error
-            default:
-                XCTFail("Expected failure, but got \(result) instead")
-            }
+        let exp = expectation(description: "wait to get value")
+        var receivedResult: HTTPClientResult?
+        makeSUT().get(from: anyURL()) { result in
+            receivedResult = result
             exp.fulfill()
-        })
+        }
         wait(for: [exp], timeout: 1.0)
-        return receivedError
+        return receivedResult
     }
     
     private func makeSUT() -> URLSessionHTTPClient {
