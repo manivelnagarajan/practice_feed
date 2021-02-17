@@ -11,18 +11,9 @@ import PracticeFeed
 class PracticeFeedAPIEndToEndTests: XCTestCase {
 
     func test_EndToEndTestServer_GetFeedResult_matchesFixedData() {
-        let url = URL(string: "https://essentialdeveloper.com/feed-case-study/test-api/feed")!
-        let client = URLSessionHTTPClient()
-        let loader = RemoteFeedLoader(client: client, url: url)
-        var receivedResult: LoadFeedResult?
-        let exp = expectation(description: "waiting to load feed api")
-        loader.load { result in
-            receivedResult = result
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 5.0)
-        switch receivedResult {
-        case let .success(feedItems):
+        let result = getRemoteFeedLoaderResult()
+        switch result {
+        case let .success(feedItems)?:
             XCTAssertEqual(feedItems.count, 8,  "Expected 8 items but got \(feedItems.count) instead")
             XCTAssertEqual(feedItems[0], expectedItem(at: 0))
             XCTAssertEqual(feedItems[1], expectedItem(at: 1))
@@ -33,7 +24,7 @@ class PracticeFeedAPIEndToEndTests: XCTestCase {
             XCTAssertEqual(feedItems[6], expectedItem(at: 6))
             XCTAssertEqual(feedItems[7], expectedItem(at: 7))
             
-        case let .failure(error):
+        case let .failure(error)?:
             XCTFail("Expected success but got \(error.localizedDescription) instead")
         default:
             XCTFail("Expected success but got no result")
@@ -41,6 +32,20 @@ class PracticeFeedAPIEndToEndTests: XCTestCase {
     }
     
     //MARK: Helpers
+    private func getRemoteFeedLoaderResult() -> LoadFeedResult? {
+        let url = URL(string: "https://essentialdeveloper.com/feed-case-study/test-api/feed")!
+        let client = URLSessionHTTPClient()
+        let loader = RemoteFeedLoader(client: client, url: url)
+        var receivedResult: LoadFeedResult?
+        let exp = expectation(description: "waiting to load feed api")
+        loader.load { result in
+            receivedResult = result
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 5.0)
+        return receivedResult
+    }
+    
     private func expectedItem(at index: Int) -> FeedItem {
         return FeedItem(
                     id: id(at: index),
