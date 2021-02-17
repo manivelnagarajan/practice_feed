@@ -11,8 +11,7 @@ import PracticeFeed
 class PracticeFeedAPIEndToEndTests: XCTestCase {
 
     func test_EndToEndTestServer_GetFeedResult_matchesFixedData() {
-        let result = getRemoteFeedLoaderResult()
-        switch result {
+        switch getRemoteFeedLoaderResult() {
         case let .success(feedItems)?:
             XCTAssertEqual(feedItems.count, 8,  "Expected 8 items but got \(feedItems.count) instead")
             XCTAssertEqual(feedItems[0], expectedItem(at: 0))
@@ -32,10 +31,12 @@ class PracticeFeedAPIEndToEndTests: XCTestCase {
     }
     
     //MARK: Helpers
-    private func getRemoteFeedLoaderResult() -> LoadFeedResult? {
+    private func getRemoteFeedLoaderResult(file: StaticString = #filePath, line: UInt = #line) -> LoadFeedResult? {
         let url = URL(string: "https://essentialdeveloper.com/feed-case-study/test-api/feed")!
         let client = URLSessionHTTPClient()
         let loader = RemoteFeedLoader(client: client, url: url)
+        trackForMemoryLeak(client, file: file, line: line)
+        trackForMemoryLeak(loader, file: file, line: line)
         var receivedResult: LoadFeedResult?
         let exp = expectation(description: "waiting to load feed api")
         loader.load { result in
