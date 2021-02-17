@@ -10,7 +10,7 @@ import PracticeFeed
 
 class PracticeFeedAPIEndToEndTests: XCTestCase {
 
-    func test_EndToEndTestServer_GetFeedResult_matchesFixedData() {
+    func test_EndToEndTestServer_GetRemoteFeedLoaderResult_matchesFixedDataFromTestAccount() {
         switch getRemoteFeedLoaderResult() {
         case let .success(feedItems)?:
             XCTAssertEqual(feedItems.count, 8,  "Expected 8 items but got \(feedItems.count) instead")
