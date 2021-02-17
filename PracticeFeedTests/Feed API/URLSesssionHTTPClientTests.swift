@@ -23,14 +23,16 @@ class URLSesssionHTTPClientTests: XCTestCase {
     
     func test_getFromURL_performGetRequestWithURL() {
         let url = anyURL()
-        let exp = expectation(description: "waiting for the request load")
+        var receivedRequests = [URLRequest]()
         URLProtocolStub.observeRequests { request in
-            XCTAssertEqual(request.url, url)
-            XCTAssertEqual(request.httpMethod, "GET")
-            exp.fulfill()
+            receivedRequests.append(request)
         }
-        makeSUT().get(from: url) { _ in }
+        let exp = expectation(description: "waiting for the request load")
+        makeSUT().get(from: url) { _ in  exp.fulfill()}
         wait(for: [exp], timeout: 1)
+        XCTAssertEqual(receivedRequests.count, 1)
+        XCTAssertEqual(receivedRequests.first?.url, url)
+        XCTAssertEqual(receivedRequests.first?.httpMethod, "GET")
     }
     
     func test_getFromURL_dataTaskWithURL_Failure() {
