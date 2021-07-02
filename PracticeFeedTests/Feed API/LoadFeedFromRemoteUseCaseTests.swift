@@ -1,5 +1,5 @@
 //
-//  RemoteFeedLoaderTests.swift
+//  LoadFeedFromRemoteUseCaseTests.swift
 //  PracticeFeedTests
 //
 //  Created by Manivel Nagarajan on 04/02/21.
@@ -9,7 +9,7 @@ import Foundation
 import XCTest
 import PracticeFeed
 
-class RemoteFeedLoaderTests: XCTestCase {
+class LoadFeedFromRemoteUseCaseTests: XCTestCase {
     
     func test_init_doesNotLoad() {
         let (_, client) = makeSUT()
