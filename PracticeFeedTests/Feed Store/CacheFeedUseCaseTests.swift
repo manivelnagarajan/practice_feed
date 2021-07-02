@@ -17,10 +17,12 @@ class LocalFeedLoader {
         self.currentDate = currentDate
     }
     
-    func save(_ items: [FeedItem]) {
+    func save(_ items: [FeedItem], completion: @escaping (Error?) -> ()) {
         store.deleteCachedFeed { [unowned self] error in
             if error == nil {
                 self.store.insert(items, timestamp: currentDate())
+            } else {
+                completion(error)
             }
         }
     }
@@ -63,13 +65,13 @@ class CacheFeedUseCaseTests: XCTestCase {
     
     func test_save_requestsCacheDeletion() {
         let (sut, store) = makeSUT()
-        sut.save([uniqueItem()])
+        sut.save([uniqueItem(), ]) {_ in }
         XCTAssertEqual(store.receivedMessages, [.deleteCacheFeed])
     }
     
     func test_save_doesNotRequestsInsertion_whenDeletionError() {
         let (sut, store) = makeSUT()
-        sut.save([uniqueItem()])
+        sut.save([uniqueItem()]) {_ in }
         store.completeWithError(anyNSError(), at: 0)
         XCTAssertEqual(store.receivedMessages, [.deleteCacheFeed])
     }
@@ -78,9 +80,24 @@ class CacheFeedUseCaseTests: XCTestCase {
         let timestamp = Date()
         let items = [uniqueItem(), uniqueItem()]
         let (sut, store) = makeSUT(currentDate: { timestamp })
-        sut.save(items)
+        sut.save(items) {_ in }
         store.completeDeletionSuccessfully(at: 0)
         XCTAssertEqual(store.receivedMessages, [.deleteCacheFeed, .insert(items, timestamp)])
+    }
+    
+    func test_save_fails_whenDeletionError() {
+        let (sut, store) = makeSUT()
+        let items = [uniqueItem(), uniqueItem()]
+        let deletionError = anyNSError()
+        let exp = expectation(description: "wating for save result")
+        var receivedError: Error?
+        sut.save(items) { error in
+            receivedError = error
+            exp.fulfill()
+        }
+        store.completeWithError(deletionError, at: 0)
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(receivedError as NSError?, deletionError)
     }
     
     //MARK: Helpers
