@@ -7,13 +7,6 @@
 
 import Foundation
 
-internal struct RemoteFeedItem: Decodable {
-    var id: UUID
-    var description: String?
-    var location: String?
-    var image: URL
-}
-
 internal final class FeedItemsMapper {
     
     private struct Root: Decodable {
