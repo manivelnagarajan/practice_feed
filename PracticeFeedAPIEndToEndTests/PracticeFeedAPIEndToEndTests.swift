@@ -14,14 +14,14 @@ class PracticeFeedAPIEndToEndTests: XCTestCase {
         switch getRemoteFeedLoaderResult() {
         case let .success(feedItems)?:
             XCTAssertEqual(feedItems.count, 8,  "Expected 8 items but got \(feedItems.count) instead")
-            XCTAssertEqual(feedItems[0], expectedItem(at: 0))
-            XCTAssertEqual(feedItems[1], expectedItem(at: 1))
-            XCTAssertEqual(feedItems[2], expectedItem(at: 2))
-            XCTAssertEqual(feedItems[3], expectedItem(at: 3))
-            XCTAssertEqual(feedItems[4], expectedItem(at: 4))
-            XCTAssertEqual(feedItems[5], expectedItem(at: 5))
-            XCTAssertEqual(feedItems[6], expectedItem(at: 6))
-            XCTAssertEqual(feedItems[7], expectedItem(at: 7))
+            XCTAssertEqual(feedItems[0], expectedFeedImage(at: 0))
+            XCTAssertEqual(feedItems[1], expectedFeedImage(at: 1))
+            XCTAssertEqual(feedItems[2], expectedFeedImage(at: 2))
+            XCTAssertEqual(feedItems[3], expectedFeedImage(at: 3))
+            XCTAssertEqual(feedItems[4], expectedFeedImage(at: 4))
+            XCTAssertEqual(feedItems[5], expectedFeedImage(at: 5))
+            XCTAssertEqual(feedItems[6], expectedFeedImage(at: 6))
+            XCTAssertEqual(feedItems[7], expectedFeedImage(at: 7))
             
         case let .failure(error)?:
             XCTFail("Expected success but got \(error.localizedDescription) instead")
@@ -47,12 +47,12 @@ class PracticeFeedAPIEndToEndTests: XCTestCase {
         return receivedResult
     }
     
-    private func expectedItem(at index: Int) -> FeedItem {
-        return FeedItem(
+    private func expectedFeedImage(at index: Int) -> FeedImage {
+        return FeedImage(
                     id: id(at: index),
                     description: description(at: index),
                     location: location(at: index),
-                    imageURL: imageURL(at: index))
+                    url: imageURL(at: index))
     }
     
     private func id(at index: Int) -> UUID {
