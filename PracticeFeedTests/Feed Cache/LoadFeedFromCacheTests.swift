@@ -38,6 +38,17 @@ class LoadFeedFromCacheTests: XCTestCase {
         }
     }
     
+    func test_load_deliversCachedImagesOnLessThanSevenDaysOld() {
+        let feed = uniqueImageFeed()
+        let fixedCurrentDate = Date()
+        let lessThanSevenDaysOldTimeStamp = fixedCurrentDate.adding(days: -7).adding(seconds: 1)
+        let (sut, store) = makeSUT()
+        
+        expect(sut, toCompleteWith: .success(feed.models)) {
+            store.completeRetrieval(with: feed.locals, timeStamp: lessThanSevenDaysOldTimeStamp)
+        }
+    }
+    
     //MARK: Helpers
     func makeSUT(currentDate: @escaping() -> Date = Date.init, file: StaticString = #filePath, line: UInt = #line) -> (LocalFeedLoader, FeedStoreSpy) {
         let store = FeedStoreSpy()
@@ -47,16 +58,16 @@ class LoadFeedFromCacheTests: XCTestCase {
         return (sut, store)
     }
     
-    func expect(_ sut: LocalFeedLoader, toCompleteWith expectedResult: LocalFeedLoader.LoadResult, when action: ()->()) {
+    func expect(_ sut: LocalFeedLoader, toCompleteWith expectedResult: LocalFeedLoader.LoadResult, when action: ()->(), file: StaticString = #filePath, line: UInt = #line) {
         let exp = expectation(description: "waiting for load completion")
         sut.load { receivedResult in
             switch (receivedResult, expectedResult) {
             case let (.success(receivedImages), .success(expectedImages)):
-                XCTAssertEqual(receivedImages, expectedImages)
+                XCTAssertEqual(receivedImages, expectedImages, file: file, line: line)
             case let (.failure(receivedError as NSError), .failure(expectedError as NSError)):
-                XCTAssertEqual(receivedError, expectedError)
+                XCTAssertEqual(receivedError, expectedError, file: file, line: line)
             default:
-                XCTFail("Expected result \(expectedResult), got \(receivedResult)")
+                XCTFail("Expected result \(expectedResult), got \(receivedResult)", file: file, line: line)
             }
             exp.fulfill()
         }
@@ -66,5 +77,29 @@ class LoadFeedFromCacheTests: XCTestCase {
     
     private func anyNSError() -> NSError {
         NSError(domain: "Test", code: 1, userInfo: nil)
+    }
+    
+    func uniqueImageFeed() -> (models: [FeedImage], locals: [LocalFeedImage]) {
+        let models = [uniqueImage(), uniqueImage()]
+        let locals = models.map({ LocalFeedImage(id: $0.id, description: $0.description, location: $0.location, url: $0.url) })
+        return (models, locals)
+    }
+    
+    func uniqueImage() -> FeedImage {
+        FeedImage(id: UUID(), description: "any desc", location: nil, url: anyURL())
+    }
+    
+    private func anyURL() -> URL {
+        URL(string: "https://any-url.com/")!
+    }
+}
+
+private extension Date {
+    func adding(days: Int) -> Date {
+        Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: self)!
+    }
+    
+    func adding(seconds: TimeInterval) -> Date {
+        self + seconds
     }
 }
