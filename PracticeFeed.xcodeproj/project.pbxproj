@@ -155,7 +155,7 @@
 			isa = PBXGroup;
 			children = (
 				6560C36125D949DB007EEC52 /* Helpers */,
-				655AAA1E268F2EF3009D248B /* Feed Store */,
+				655AAA1E268F2EF3009D248B /* Feed Cache */,
 				6587BEA525D00EEF001E098D /* Feed API */,
 				6556BBF125CB24ED0074A51F /* Info.plist */,
 				6556BC0C25CB36BC0074A51F /* PracticeFeedTests-Bridging-Header.h */,
@@ -172,14 +172,14 @@
 			path = "Feed Feature";
 			sourceTree = "<group>";
 		};
-		655AAA1E268F2EF3009D248B /* Feed Store */ = {
+		655AAA1E268F2EF3009D248B /* Feed Cache */ = {
 			isa = PBXGroup;
 			children = (
 				655AAA25268F385B009D248B /* CacheFeedUseCaseTests.swift */,
 				6553936426AC1DBB007BAB2E /* LoadFeedFromCacheTests.swift */,
 				6553936926AC2912007BAB2E /* Helpers */,
 			);
-			path = "Feed Store";
+			path = "Feed Cache";
 			sourceTree = "<group>";
 		};
 		655CB2D12690E2F900E58BBB /* Feed Cache */ = {
