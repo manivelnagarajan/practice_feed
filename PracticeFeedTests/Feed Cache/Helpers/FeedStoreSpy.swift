@@ -11,6 +11,7 @@ import PracticeFeed
 class FeedStoreSpy: FeedStore {
     var insertCompletions: [InsertCompletion] = []
     var deleteCompletions: [DeleteCompletion] = []
+    var retrieveCompletions: [RetrieveCompletion] = []
     var receivedMessages: [ReceivedMessage] = []
     
     enum ReceivedMessage: Equatable {
@@ -29,9 +30,11 @@ class FeedStoreSpy: FeedStore {
         receivedMessages.append(.insert(feed, timestamp))
     }
     
-    func retrieve() {
+    func retrieve(completion: @escaping RetrieveCompletion) {
+        retrieveCompletions.append(completion)
         receivedMessages.append(.retrieve)
     }
+    
     func completeDeletion(with error: NSError, at index: Int) {
         deleteCompletions[index](error)
     }
@@ -46,5 +49,9 @@ class FeedStoreSpy: FeedStore {
     
     func completeInsertionSuccessfully(at index: Int) {
         insertCompletions[index](nil)
+    }
+    
+    func completeRetrieval(with error: NSError, at index: Int = 0) {
+        retrieveCompletions[index](error)
     }
 }
